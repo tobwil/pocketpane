@@ -1,0 +1,5 @@
+.build/
+.cache/
+.tools/
+dist/
+.DS_Store
