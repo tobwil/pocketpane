@@ -1,72 +1,55 @@
 # PocketPane for Windows
 
-This folder contains a Windows implementation of PocketPane as a PowerShell/WPF
-desktop app. It mirrors and controls Android devices by launching the official
-`scrcpy.exe` and uses `adb.exe` for pairing, connection management,
-screenshots, app listing, and file transfer.
+PocketPane mirrors and controls Android phones over Wi-Fi. The Windows port uses PowerShell/WPF for its desktop interface, the official scrcpy for mirroring, and ADB for pairing, connections, screenshots, app listing, and file transfer.
+
+## Download the portable release
+
+Download [PocketPane-0.2.0-Windows-x64.zip](https://github.com/tobwil/pocketpane/releases/download/v0.2.0/PocketPane-0.2.0-Windows-x64.zip), extract the complete folder, and double-click **PocketPane.exe**.
+
+ADB, scrcpy 4.0, and scrcpy-server are included in the release package. Users do not need to install them separately. Windows may show a SmartScreen warning because the executable is not yet code-signed.
 
 ## Requirements
 
-- Windows 10 or newer.
-- PowerShell 5.1 with WPF support.
-- Android Platform Tools (`adb.exe`).
-- scrcpy for Windows (`scrcpy.exe`).
-- Android 11 or newer for Wireless debugging pairing.
+- Windows 10 or newer, x64
+- Android 11 or newer for Wireless debugging pairing
+- Both devices on the same local network
 
-Android 16 is supported because scrcpy supports Android API 21+ and ADB Wireless
-debugging pairing is available on Android 11+. The Galaxy A53 5G is supported
-when it is running One UI 8 / Android 16 and Wireless debugging is enabled.
+Android 16 is supported. The Galaxy A53 5G is supported when it is running One UI 8 / Android 16 and Wireless debugging is enabled.
 
-## Install ADB and scrcpy
+## Run from source
 
-Double-click:
+Install the official Windows tools by double-clicking:
 
-```text
-Windows\Install-Tools-Windows.cmd
-```
+    Windows\Install-Tools-Windows.cmd
 
-This downloads the official `scrcpy-win64-v4.0.zip` release from GitHub into
-`.tools\scrcpy-win64-v4.0`. The archive includes both `scrcpy.exe` and
-`adb.exe`.
+Then launch:
 
-## Run
+    Windows\Start-PocketPane-Windows.cmd
 
-From this repository:
+Or run directly from PowerShell:
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\Windows\PocketPane.Windows.ps1
-```
+    powershell -ExecutionPolicy Bypass -File .\Windows\PocketPane.Windows.ps1
 
-You can also double-click:
-
-```text
-Windows\Start-PocketPane-Windows.cmd
-```
-
-The app searches for `adb.exe` and `scrcpy.exe` in:
-
-- `Windows\bin`
-- `.tools`
-- Android SDK environment paths
-- common Android SDK and scrcpy install paths
-- `PATH`
+The source version searches for adb.exe and scrcpy.exe in Windows\bin, .tools, Android SDK paths, common install paths, and PATH.
 
 ## Current features
 
-- Finds ADB devices and Wireless debugging mDNS services.
-- Pairs with Android Wireless debugging by IP/port and 6 digit code.
-- Connects over Wi-Fi, including the USB-to-Wi-Fi shortcut on port 5555.
-- Starts scrcpy mirroring with resolution, FPS, audio, touch, screen-off, and
-  borderless options.
-- Saves PNG screenshots.
-- Records MP4 presentations through scrcpy.
-- Sends dropped files to `/sdcard/Download/`.
-- Lists launchable Android apps and starts a selected app on a new scrcpy
-  virtual display.
+- Finds ADB devices and Wireless debugging mDNS services
+- Pairs using the Android IP/port and 6 digit pairing code
+- Connects over Wi-Fi, including the USB-to-Wi-Fi shortcut on port 5555
+- Starts mirroring with resolution, FPS, audio, touch, screen-off, and borderless options
+- Saves PNG screenshots and records MP4 presentations
+- Sends dropped files to /sdcard/Download/
+- Lists Android apps and launches them on a new scrcpy virtual display
 
-## Samsung A53 notes
+## Building the executable release
 
-On Samsung devices, enable Developer options first, then enable USB debugging
-and Wireless debugging. For USB setup, Windows may need the Samsung USB driver.
-For wireless setup, Windows Defender Firewall must allow ADB/scrcpy on the
-local network.
+On Windows, run:
+
+    .\Windows\Build-Windows-Release.ps1 -Version 0.2.0
+
+The build downloads the official scrcpy 4.0 archive, verifies its SHA-256 checksum, compiles PocketPane.exe, and creates a portable ZIP plus checksum in dist. The GitHub Actions workflow performs the same build and attaches both files to release v0.2.0.
+
+## Samsung notes
+
+On Samsung devices, enable Developer options first, then USB debugging and Wireless debugging. Windows may need the Samsung USB driver for USB setup. Windows Defender Firewall must allow ADB and scrcpy on the local network.
