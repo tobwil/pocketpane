@@ -12,6 +12,7 @@ $script:Tools = @{
 $script:Devices = @()
 $script:Services = @()
 $script:SelectedSerial = $null
+$script:IsRefreshingUi = $false
 $script:LastConnectAddressPath = Join-Path $env:LOCALAPPDATA "PocketPane\settings.txt"
 
 $xaml = @"
@@ -529,23 +530,7 @@ function Load-LastConnectAddress {
     return ""
 }
 
-function Refresh-UiState {
-    $DeviceList.Items.Clear()
-    foreach ($device in $script:Devices) {
-        $item = [System.Windows.Controls.ListBoxItem]::new()
-        $item.Content = Format-DeviceLabel $device
-        $item.Tag = $device.Serial
-        [void]$DeviceList.Items.Add($item)
-        if ($device.Serial -eq $script:SelectedSerial) {
-            $DeviceList.SelectedItem = $item
-        }
-    }
-
-    if ($DeviceList.SelectedItem -eq $null -and $DeviceList.Items.Count -gt 0) {
-        $DeviceList.SelectedIndex = 0
-        $script:SelectedSerial = $DeviceList.SelectedItem.Tag
-    }
-
+function Update-ActionButtons {
     $ready = ($script:Tools.adb -and $script:Tools.scrcpy)
     $hasAdb = ($script:Tools.adb -ne $null)
     $hasDevice = ($script:SelectedSerial -ne $null)
@@ -559,6 +544,31 @@ function Refresh-UiState {
     $DisconnectButton.IsEnabled = ($script:Tools.adb -and $hasDevice)
     $LoadAppsButton.IsEnabled = $ready -and $hasDevice
     $LaunchAppButton.IsEnabled = $ready -and $hasDevice
+}
+
+function Refresh-UiState {
+    $script:IsRefreshingUi = $true
+    try {
+        $DeviceList.Items.Clear()
+        foreach ($device in $script:Devices) {
+            $item = [System.Windows.Controls.ListBoxItem]::new()
+            $item.Content = Format-DeviceLabel $device
+            $item.Tag = $device.Serial
+            [void]$DeviceList.Items.Add($item)
+            if ($device.Serial -eq $script:SelectedSerial) {
+                $DeviceList.SelectedItem = $item
+            }
+        }
+
+        if ($DeviceList.SelectedItem -eq $null -and $DeviceList.Items.Count -gt 0) {
+            $DeviceList.SelectedIndex = 0
+            $script:SelectedSerial = $DeviceList.SelectedItem.Tag
+        }
+    } finally {
+        $script:IsRefreshingUi = $false
+    }
+
+    Update-ActionButtons
 }
 
 function Refresh-Devices {
@@ -930,9 +940,10 @@ $ConnectAddressBox.Text = Load-LastConnectAddress
 $RefreshButton.Add_Click({ Invoke-UiAction { Refresh-Devices } })
 $DeviceList.Add_SelectionChanged({
     Invoke-UiAction {
+        if ($script:IsRefreshingUi) { return }
         if ($DeviceList.SelectedItem) {
             $script:SelectedSerial = $DeviceList.SelectedItem.Tag
-            Refresh-UiState
+            Update-ActionButtons
         }
     }
 })
