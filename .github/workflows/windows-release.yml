@@ -1,0 +1,43 @@
+name: Windows Release
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "Windows/**"
+      - ".github/workflows/windows-release.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows-x64:
+    runs-on: windows-latest
+    env:
+      POCKETPANE_VERSION: "0.2.0"
+      RELEASE_TAG: "v0.2.0"
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build portable Windows package
+        shell: powershell
+        run: .\Windows\Build-Windows-Release.ps1 -Version $env:POCKETPANE_VERSION
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PocketPane-${{ env.POCKETPANE_VERSION }}-Windows-x64
+          path: |
+            dist/PocketPane-${{ env.POCKETPANE_VERSION }}-Windows-x64.zip
+            dist/PocketPane-${{ env.POCKETPANE_VERSION }}-Windows-x64.zip.sha256
+          if-no-files-found: error
+
+      - name: Attach Windows download to GitHub release
+        shell: powershell
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload $env:RELEASE_TAG "dist/PocketPane-$env:POCKETPANE_VERSION-Windows-x64.zip" "dist/PocketPane-$env:POCKETPANE_VERSION-Windows-x64.zip.sha256" --clobber
